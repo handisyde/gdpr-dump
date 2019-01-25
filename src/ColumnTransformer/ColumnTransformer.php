@@ -13,20 +13,27 @@ abstract class ColumnTransformer
 
     const COLUMN_TRANSFORM_REQUEST = "columntransform.request";
 
+    const DEFAULT_LOCALE = 'en_US';
+
     private $tableName;
 
     private $columnName;
 
     protected static $dispatcher;
 
+    protected static $locale = self::DEFAULT_LOCALE;
+
+    public static function setLocale($locale)
+    {
+        self::$locale = $locale;
+    }
 
     public static function setUp()
     {
         if (!isset(self::$dispatcher)) {
             self::$dispatcher = new EventDispatcher();
-
             self::$dispatcher->addListener(self::COLUMN_TRANSFORM_REQUEST,
-              new FakerColumnTransformer());
+              new FakerColumnTransformer(self::$locale));
             self::$dispatcher->addListener(self::COLUMN_TRANSFORM_REQUEST,
               new ClearColumnTransformer());
         }

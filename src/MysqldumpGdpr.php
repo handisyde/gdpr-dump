@@ -4,7 +4,6 @@ namespace machbarmacher\GdprDump;
 
 use Ifsnop\Mysqldump\Mysqldump;
 use machbarmacher\GdprDump\ColumnTransformer\ColumnTransformer;
-use machbarmacher\GdprDump\ColumnTransformer\ColumnTransformerFaker;
 
 class MysqldumpGdpr extends Mysqldump
 {
@@ -39,6 +38,12 @@ class MysqldumpGdpr extends Mysqldump
             $this->debugSql = $dumpSettings['debug-sql'];
             unset($dumpSettings['debug-sql']);
         }
+
+        if (array_key_exists('locale', $dumpSettings)) {
+            ColumnTransformer::setLocale($dumpSettings['locale']);
+            unset($dumpSettings['locale']);
+        }
+
         parent::__construct($dsn, $user, $pass, $dumpSettings, $pdoSettings);
     }
 
