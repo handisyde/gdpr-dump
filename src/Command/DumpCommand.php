@@ -192,7 +192,7 @@ class DumpCommand extends Command
         $user = $dumpSettings['user'];
 
 
-        $dumpSettings['password'] = $this->getEffectivePassword($input, $output, $dumpSettings['password']);
+        $dumpSettings['password'] = $this->getEffectivePassword($input, $output, @$dumpSettings['password']);
         $password = $dumpSettings['password'];
 
         $dsn = $this->getDsn($dumpSettings);
