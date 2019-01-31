@@ -52,6 +52,16 @@ abstract class ColumnTransformer
         return false;
     }
 
+    public static function getAllFormatters()
+    {
+        self::setUp();
+        $result = [];
+        foreach(self::$dispatcher->getListeners(self::COLUMN_TRANSFORM_REQUEST) as $listener) {
+            $result = array_merge($result, $listener->getSupportedFormatters());
+        }
+        return $result;
+    }
+
     public function __invoke(ColumnTransformEvent $event)
     {
         if (in_array(($event->getExpression())['formatter'],

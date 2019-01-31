@@ -5,6 +5,7 @@ namespace machbarmacher\GdprDump\Command;
 use Ifsnop\Mysqldump\Mysqldump;
 use machbarmacher\GdprDump\ConfigParser;
 use machbarmacher\GdprDump\MysqldumpGdpr;
+use machbarmacher\GdprDump\ColumnTransformer\ColumnTransformer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -123,6 +124,8 @@ class DumpCommand extends Command
                 'Currently ignored (hardcoded to on in mysqldump-php).')
             ->addOption('opt', null, InputOption::VALUE_NONE,
                 'Implies --add-drop-table --add-locks --disable-keys --extended-insert --hex-blob --no-autocommit --single-transaction.')
+            ->addOption('list-formatters', null, InputOption::VALUE_NONE,
+                'Lists all available formatters and exists (don\'t forget to pass --locale if needed)')
             ->addOption('skip-triggers', null, InputOption::VALUE_NONE,
                 'Do not dump triggers.')
             ->addOption('skip-tz-utc', null, InputOption::VALUE_NONE,
@@ -275,15 +278,22 @@ class DumpCommand extends Command
         $dumpSettings = array_intersect_key($dumpSettings,
             $this->getDumpSettingsDefault());
 
+        if($input->getOption('list-formatters'))
+        {
+            $this->listFormatters($output, $dumpSettings);
+            exit();
+        }
+
         if($input->getOption('display-effective-replacements'))
         {
             //we simply display the gdpr-dump specific settings and exit.
             $this->displayEffectiveReplacements($output, $dumpSettings);
-        } else {
-            $dumper = new MysqldumpGdpr($dsn, $user, $password, $dumpSettings,
-                $pdoSettings);
-            $dumper->start($input->getOption('result-file'));
+            exit();
         }
+
+        $dumper = new MysqldumpGdpr($dsn, $user, $password, $dumpSettings,
+            $pdoSettings);
+        $dumper->start($input->getOption('result-file'));
     }
 
     protected function getDefaults($extraFile)
@@ -423,6 +433,20 @@ class DumpCommand extends Command
         }
         if (isset($dumpSettings['gdpr-replacements'])) {
             $output->writeln("gdpr-replacements=" . json_encode($dumpSettings['gdpr-replacements']));
+        }
+    }
+
+    protected function listFormatters(
+        OutputInterface $output,
+        $dumpSettings
+    ) {
+        if (array_key_exists('locale', $dumpSettings)) {
+            ColumnTransformer::setLocale($dumpSettings['locale']);
+        }
+        $formatters = ColumnTransformer::getAllFormatters();
+        echo count($formatters)." formatters found:\n";
+        foreach(ColumnTransformer::getAllFormatters() as $formatter) {
+            echo "\t$formatter\n";
         }
     }
 }
