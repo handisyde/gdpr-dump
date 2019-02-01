@@ -32,6 +32,17 @@ class MysqldumpGdpr extends Mysqldump
         if (array_key_exists('gdpr-replacements', $dumpSettings)) {
             $this->gdprReplacements = $this->normalizeColumnsList($dumpSettings['gdpr-replacements']);
             unset($dumpSettings['gdpr-replacements']);
+            // Normalize keys to avoid testing key existence later on
+            foreach($this->gdprReplacements as $table => &$columns) {
+                foreach($columns as $column => &$config) {
+                    if(array_key_exists('keepEmpty', $config) === false) {
+                        $config['keepEmpty'] = false;
+                    }
+                    if(array_key_exists('keepNull', $config) === false) {
+                        $config['keepNull'] = false;
+                    }
+                }
+            }
         }
 
         if (array_key_exists('debug-sql', $dumpSettings)) {
@@ -74,6 +85,10 @@ class MysqldumpGdpr extends Mysqldump
         $tableName = strtolower($tableName);
         $colName = strtolower($colName);
         if (!empty($this->gdprReplacements[$tableName][$colName])) {
+            $replacements = $this->gdprReplacements[$tableName][$colName];
+            if(($colValue === null && $replacements['keepNull']) || ($colValue == '' && $replacements['keepEmpty'])) {
+                return $colValue;
+            }
             $replacement = ColumnTransformer::replaceValue($tableName, $colName, $this->gdprReplacements[$tableName][$colName]);
             if($replacement !== FALSE) {
                 return $replacement;
