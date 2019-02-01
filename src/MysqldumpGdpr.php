@@ -41,6 +41,9 @@ class MysqldumpGdpr extends Mysqldump
                     if(array_key_exists('keepNull', $config) === false) {
                         $config['keepNull'] = false;
                     }
+                    if(array_key_exists('args', $config) === false) {
+                        $config['args'] = [];
+                    }
                 }
             }
         }

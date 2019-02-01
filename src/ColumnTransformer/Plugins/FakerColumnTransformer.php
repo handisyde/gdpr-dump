@@ -45,6 +45,6 @@ class FakerColumnTransformer extends ColumnTransformer
 
     public function getValue($expression)
     {
-        return self::$generator->format(self::$formatterTansformerMap[$expression['formatter']]);
+        return self::$generator->format(self::$formatterTansformerMap[$expression['formatter']], $expression['args']);
     }
 }
