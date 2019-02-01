@@ -25,12 +25,12 @@ class MysqldumpGdpr extends Mysqldump
         array $pdoSettings = []
     ) {
         if (array_key_exists('gdpr-expressions', $dumpSettings)) {
-            $this->gdprExpressions = $dumpSettings['gdpr-expressions'];
+            $this->gdprExpressions = $this->normalizeColumnsList($dumpSettings['gdpr-expressions']);
             unset($dumpSettings['gdpr-expressions']);
         }
 
         if (array_key_exists('gdpr-replacements', $dumpSettings)) {
-            $this->gdprReplacements = $dumpSettings['gdpr-replacements'];
+            $this->gdprReplacements = $this->normalizeColumnsList($dumpSettings['gdpr-replacements']);
             unset($dumpSettings['gdpr-replacements']);
         }
 
@@ -50,11 +50,14 @@ class MysqldumpGdpr extends Mysqldump
     public function getColumnStmt($tableName)
     {
         $columnStmt = parent::getColumnStmt($tableName);
+        $tableName = strtolower($tableName);
+
         if (!empty($this->gdprExpressions[$tableName])) {
             $columnTypes = $this->tableColumnTypes()[$tableName];
             foreach (array_keys($columnTypes) as $i => $columnName) {
-                if (!empty($this->gdprExpressions[$tableName][$columnName])) {
-                    $expression = $this->gdprExpressions[$tableName][$columnName];
+                $columnKey = strtolower($columnName);
+                if (!empty($this->gdprExpressions[$tableName][$columnKey])) {
+                    $expression = $this->gdprExpressions[$tableName][$columnKey];
                     $columnStmt[$i] = "$expression as $columnName";
                 }
             }
@@ -68,6 +71,8 @@ class MysqldumpGdpr extends Mysqldump
 
     protected function hookTransformColumnValue($tableName, $colName, $colValue, $row)
     {
+        $tableName = strtolower($tableName);
+        $colName = strtolower($colName);
         if (!empty($this->gdprReplacements[$tableName][$colName])) {
             $replacement = ColumnTransformer::replaceValue($tableName, $colName, $this->gdprReplacements[$tableName][$colName]);
             if($replacement !== FALSE) {
@@ -77,4 +82,17 @@ class MysqldumpGdpr extends Mysqldump
         return $colValue;
     }
 
+    private function normalizeColumnsList(&$tables) {
+        $result = [];
+        foreach($tables as $table => $columns) {
+            $table = strtolower($table);
+            $tmp = [];
+            foreach($columns as $column => $conf) {
+                $column = strtolower($column);
+                $tmp[$column] = $conf;
+            }
+            $result[$table] = $tmp;
+        }
+        return $result;
+    }
 }
