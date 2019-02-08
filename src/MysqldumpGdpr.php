@@ -75,10 +75,10 @@ class MysqldumpGdpr extends Mysqldump
                     $columnStmt[$i] = "$expression as $columnName";
                 }
             }
-            if ($this->debugSql) {
-                print "/* SELECT " . implode(",",
-                        $columnStmt) . " FROM `$tableName` */\n\n";
-            }
+        }
+        if ($this->debugSql) {
+            print "/* SELECT " . implode(",",
+                    $columnStmt) . " FROM `$tableName` */\n\n";
         }
         return $columnStmt;
     }
