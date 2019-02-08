@@ -113,6 +113,10 @@ class DumpCommand extends Command
                 'A json of gdpr replacement values keyed by table and column.')
             ->addOption('gdpr-replacements-file', null, InputOption::VALUE_OPTIONAL,
                 'File that contains a json of gdpr replacement values keyed by table and column.')
+            ->addOption('gdpr-flush-tables', null, InputOption::VALUE_OPTIONAL,
+                'A json array of tables whose content shouldn\'t be included in the dump.')
+            ->addOption('gdpr-flush-tables-file', null, InputOption::VALUE_OPTIONAL,
+                'File that contains a json array of tables whose content shouldn\'t be included in the dump.')
             ->addOption('debug-sql', null, InputOption::VALUE_NONE,
                 'Add a comment with the dump sql.')
             ->addOption('locale', null, InputOption::VALUE_OPTIONAL,
@@ -256,6 +260,22 @@ class DumpCommand extends Command
             if (json_last_error()) {
                 throw new \UnexpectedValueException(sprintf('Invalid gdpr-replacements json (%s): %s',
                     json_last_error_msg(), $dumpSettings['gdpr-replacements']));
+            }
+        }
+
+        if (!empty($dumpSettings['gdpr-flush-tables'])) {
+            $dumpSettings['no-data'] = json_decode($dumpSettings['gdpr-flush-tables'], true);
+            if (json_last_error()) {
+                throw new \UnexpectedValueException(sprintf('Invalid gdpr-flush-tables json (%s): %s',
+                    json_last_error_msg(), $dumpSettings['gdpr-flush-tables']));
+            }
+        }
+
+        if (!empty($dumpSettings['gdpr-flush-tables-file'])) {
+            $dumpSettings['no-data'] = json_decode(file_get_contents($dumpSettings['gdpr-flush-tables-file']), true);
+            if (json_last_error()) {
+                throw new \UnexpectedValueException(sprintf('Invalid gdpr-flush-tables json (%s): %s',
+                    json_last_error_msg(), $dumpSettings['gdpr-flush-tables']));
             }
         }
 
@@ -415,6 +435,7 @@ class DumpCommand extends Command
             ] + [
                 'gdpr-expressions' => null,
                 'gdpr-replacements' => null,
+                'gdpr-flush-tables' => null,
                 'debug-sql' => false,
                 'locale' => null,
             ];
