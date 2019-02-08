@@ -7,6 +7,8 @@ use machbarmacher\GdprDump\ColumnTransformer\ColumnTransformer;
 
 class MysqldumpGdpr extends Mysqldump
 {
+    /** @var string */
+    const FAKED_COLUMN_EXPRESSION = 'CASE WHEN NULLIF(`%s`, \'\') IS NULL THEN `%s` ELSE \'x\' END';
 
     /** @var [string][string]string */
     protected $gdprExpressions;
@@ -27,6 +29,8 @@ class MysqldumpGdpr extends Mysqldump
         if (array_key_exists('gdpr-expressions', $dumpSettings)) {
             $this->gdprExpressions = $this->normalizeColumnsList($dumpSettings['gdpr-expressions']);
             unset($dumpSettings['gdpr-expressions']);
+        } else {
+            $this->gdprExpressions = [];
         }
 
         if (array_key_exists('gdpr-replacements', $dumpSettings)) {
@@ -43,6 +47,16 @@ class MysqldumpGdpr extends Mysqldump
                     }
                     if(array_key_exists('args', $config) === false) {
                         $config['args'] = [];
+                    }
+                    // Avoid fetching data from faked columns as this is useless
+                    if(array_key_exists($table, $this->gdprExpressions) == false) {
+                        $this->gdprExpressions[$table] = [];
+                    }
+                    // Do not throw away if an existing replacement exists, this may
+                    // allow further development where faked value is based on the
+                    // existing one
+                    if(array_key_exists($table, $this->gdprExpressions[$table]) == false) {
+                        $this->gdprExpressions[$table][$column] = sprintf(self::FAKED_COLUMN_EXPRESSION, $column, $column);
                     }
                 }
             }
