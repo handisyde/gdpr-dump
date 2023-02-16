@@ -1,0 +1,37 @@
+From c0f5c78ffde720a1f28d9736bc1cc8bb08612fb2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Le=20Ray?= <leray.s@reflex-holding.com>
+Date: Thu, 16 Feb 2023 22:05:51 +0100
+Subject: [PATCH] gdpr-dump: work around tableColumnTypes visibility
+
+Use of hookTransformColumnStmt won't allow to have previous behavior
+(using hook preempts any standard behavior of Mysqldump which is not
+what we want in gdpr-dump). For now, make tableColumnTypes visible for
+subclasses again
+---
+ src/Ifsnop/Mysqldump/Mysqldump.php | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/Ifsnop/Mysqldump/Mysqldump.php b/src/Ifsnop/Mysqldump/Mysqldump.php
+index ab26173..6bf0d8c 100644
+--- a/src/Ifsnop/Mysqldump/Mysqldump.php
++++ b/src/Ifsnop/Mysqldump/Mysqldump.php
+@@ -220,6 +220,16 @@ class Mysqldump
+         $this->dbHandler = null;
+     }
+ 
++    /**
++     * Get table column types.
++     *
++     * @return array
++     */
++    protected function tableColumnTypes()
++    {
++      return $this->tableColumnTypes;
++    }
++
+     /**
+      * Keyed by table name, with the value as the conditions:
+      * e.g. 'users' => 'date_registered > NOW() - INTERVAL 6 MONTH AND deleted=0'
+-- 
+2.37.3.windows.1
+

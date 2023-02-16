@@ -25,9 +25,10 @@
     }
   },
   "extra": {
+    "composer-exit-on-patch-failure": true,
     "patches": {
       "ifsnop/mysqldump-php": {
-        "Add getter": "https://patch-diff.githubusercontent.com/raw/ifsnop/mysqldump-php/pull/137.patch"
+        "Fix tableColumnTypes visibility": "patches/mysqldump-php/fix-tableColumnTypes-visibility.patch"
       }
     }
   },
