@@ -72,6 +72,7 @@ class MysqldumpGdpr extends Mysqldump
             unset($dumpSettings['locale']);
         }
 
+        $this->setTransformTableRowHook([$this, 'hookTransformRow']);
         parent::__construct($dsn, $user, $pass, $dumpSettings, $pdoSettings);
     }
 
@@ -97,21 +98,23 @@ class MysqldumpGdpr extends Mysqldump
         return $columnStmt;
     }
 
-    protected function hookTransformColumnValue($tableName, $colName, $colValue, $row)
+    protected function hookTransformRow($tableName, array $row)
     {
         $tableName = strtolower($tableName);
-        $colName = strtolower($colName);
-        if (!empty($this->gdprReplacements[$tableName][$colName])) {
-            $replacements = $this->gdprReplacements[$tableName][$colName];
-            if(($colValue === null && $replacements['keepNull']) || ($colValue == '' && $replacements['keepEmpty'])) {
-                return $colValue;
-            }
-            $replacement = ColumnTransformer::replaceValue($tableName, $colName, $this->gdprReplacements[$tableName][$colName]);
-            if($replacement !== FALSE) {
-                return $replacement;
+        foreach ($row as $colName => &$colValue) {
+            $colName = strtolower($colName);
+            if (!empty($this->gdprReplacements[$tableName][$colName])) {
+                $replacements = $this->gdprReplacements[$tableName][$colName];
+                if(($colValue === null && $replacements['keepNull']) || ($colValue == '' && $replacements['keepEmpty'])) {
+                    continue;
+                }
+                $replacement = ColumnTransformer::replaceValue($tableName, $colName, $this->gdprReplacements[$tableName][$colName]);
+                if($replacement !== FALSE) {
+                    $colValue = $replacement;
+                }
             }
         }
-        return $colValue;
+        return $row;
     }
 
     private function normalizeColumnsList(&$tables) {
