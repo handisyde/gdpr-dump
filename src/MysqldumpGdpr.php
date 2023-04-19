@@ -8,7 +8,7 @@ use machbarmacher\GdprDump\ColumnTransformer\ColumnTransformer;
 class MysqldumpGdpr extends Mysqldump
 {
     /** @var string */
-    const FAKED_COLUMN_EXPRESSION = 'CASE WHEN NULLIF(`%s`, \'\') IS NULL THEN `%s` ELSE \'x\' END';
+    const FAKED_COLUMN_EXPRESSION = 'CASE WHEN NULLIF(CAST(`%s` AS NCHAR), \'\') IS NULL THEN `%s` ELSE \'x\' END';
 
     /** @var [string][string]string */
     protected $gdprExpressions;
@@ -55,7 +55,7 @@ class MysqldumpGdpr extends Mysqldump
                     // Do not throw away if an existing replacement exists, this may
                     // allow further development where faked value is based on the
                     // existing one
-                    if(array_key_exists($table, $this->gdprExpressions[$table]) == false) {
+                    if(array_key_exists($column, $this->gdprExpressions[$table]) == false) {
                         $this->gdprExpressions[$table][$column] = sprintf(self::FAKED_COLUMN_EXPRESSION, $column, $column);
                     }
                 }
